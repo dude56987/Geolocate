@@ -29,10 +29,25 @@ def pullWebData(webAddress):
 		print 'File download Failed',webAddress
 		return False
 output = ''
-ip = pullWebData('http://ipecho.net/plain').split('\\n')[0]
-location = pullWebData("http://api.hostip.info/get_html.php?ip="+ip)
-location = location.split('\n')
+# get that ip
+try:
+	ip = pullWebData('http://ipecho.net/plain').split('\\n')[0]
+except:
+	print 'IP lookup failed!'
+	exit()
+try:
+	location = pullWebData("http://api.hostip.info/get_html.php?ip="+ip)
+except:
+	print 'IP info lookup failed!'
+	exit()
+# If any of the downloads have failed kill the program
+if ip == False or location == False:
+	print 'IP or Info download failed!'
+	exit()
+# set temp to empty
 temp = []
+# clean location data
+location = location.split('\n')
 for index in location:
 	output += index+'\n'
 	temp.append(index.split(':'))
@@ -40,10 +55,20 @@ location = temp
 temp = ''
 searchString = location[1][1]
 searchString = ('+'.join(searchString.split(' '))).replace('++','+')
-lonLat = pullWebData('http://nominatim.openstreetmap.org/search?q='+searchString+'&format=xml&polygon=1&addressdetails=1')
+try:
+	lonLat = pullWebData('http://nominatim.openstreetmap.org/search?q='+searchString+'&format=xml&polygon=1&addressdetails=1')
+except:
+	print 'Lat Lon lookup failed!'
+	exit()
+if lonLat == False:
+	print 'Lat Lon download failed!'
+	exit()
 lon = lonLat.split("lon='")[1].split("'")[0]
 lat = lonLat.split("lat='")[1].split("'")[0]
-
+if (('--exact' in sys.argv) != True):
+	# if --exact is not called cut off the decimals
+	lon = lon.split('.')[0]
+	lat = lat.split('.')[0]
 output += 'lat ='+lat+'\n'
 output += 'lon ='+lon+'\n'
 if '--latlon' in sys.argv:
